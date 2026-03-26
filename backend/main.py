@@ -1,5 +1,24 @@
-from algorithms.profundidade_limitada import executarProfundidadeLimitada
+from algorithms.profundidade_limitada import profundidade_limitada
+from data.cities_graph import cidades_vizinhas
 
-#Exemplo de utilização temos de fazer mais bonitxinho
-#if __name__ == "__main__":
-#    executarProfundidadeLimitada("Aveiro", "Faro", 4)
+
+def executar_profundidade(inicio, objetivo, limite=10):
+    resultado = profundidade_limitada(
+        cidades_vizinhas,
+        inicio,
+        objetivo,
+        limite
+    )
+    
+    if resultado:
+        caminho, custo = resultado
+        return {
+            "caminho": caminho,
+            "custo": custo
+        }
+    else:
+        return {
+            "erro": "Nenhum caminho encontrado dentro do limite"
+        }
+        
+        

@@ -28,21 +28,3 @@ def profundidade_limitada(grafo, atual, objetivo, limite, caminho=None, custo=0)
             
     return None
 
-def executarProfundidadeLimitada(inicio, objetivo, limite):
-    print('\nProcura em Profundidade Limitada')
-    print(f'[Início]: {inicio} | [Objetivo]: {objetivo} | [Limite]: {limite}\n')
-    
-    resultado = profundidade_limitada(
-        cidades_vizinhas,
-        inicio,
-        objetivo,
-        limite
-    )
-    
-    if resultado:
-        caminho, custo = resultado
-        print('\nCaminho encontrado!')
-        print('->'.join(caminho))
-        print(f'Distância total: {custo} Km')
-    else:
-        print('Nenhum caminho encontrado dentro do limite')
