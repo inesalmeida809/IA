@@ -1,6 +1,6 @@
 from services.profundidade_service import executar_profundidade
 from services.a_service import executar_a
-from services.custo_service import executar_custo
+from services.custo_uniforme_service import executar_custo
 from services.procura_service import executar_procura
 
 def executar_busca(algoritmo, inicio, destino):
