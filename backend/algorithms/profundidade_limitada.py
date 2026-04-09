@@ -1,13 +1,19 @@
-from data.cities_graph import cidades_vizinhas
-
-def profundidade_limitada(grafo, atual, objetivo, limite, caminho=None, custo=0):
+def profundidade_limitada(grafo, atual, objetivo, limite, caminho=None, custo=0, iteracoes=None):
     if caminho is None:
         caminho = [atual]
-    
-    print(f"[Visita] {atual} | [Limite]: {limite} | [Custo]: {custo}")
+        
+    if iteracoes is None:
+        iteracoes = []
+        
+    iteracoes.append({
+        "no_atual": atual,
+        "caminho": caminho,
+        "custo":  custo,
+        "limite_restante": limite
+    })
     
     if atual == objetivo:
-        return caminho, custo
+        return caminho, custo, iteracoes
     
     if limite == 0:
         return None
@@ -20,7 +26,8 @@ def profundidade_limitada(grafo, atual, objetivo, limite, caminho=None, custo=0)
                 objetivo,
                 limite - 1,
                 caminho + [vizinho],
-                custo + distancia
+                custo + distancia,
+                iteracoes
             )
             
             if resultado is not None:
