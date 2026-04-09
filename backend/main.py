@@ -1,3 +1,7 @@
-from services.profundidade_service import executar_profundidade
-import json
+from fastapi import FastAPI
 
+app = FastAPI()
+
+@app.get("/")
+def health():
+    return {"status": "ok"}
