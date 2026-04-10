@@ -26,5 +26,3 @@ def custo_uniforme(cidade_partida, cidade_chegada):
 
     print("Não existe caminho.")
     return None, None
-
-custo_uniforme("Aveiro", "Faro")
