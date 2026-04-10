@@ -5,9 +5,9 @@ router = APIRouter()
 
 @router.get("/procura-sofrega")
 def procura_sofrega_service(chegada, destino):
-    caminho, custo = procura_sofrega(chegada, destino)
+    caminho, distancia = procura_sofrega(chegada, destino)
     
-    if caminho is not None and custo is not None:
+    if caminho is not None and distancia is not None:
         return {
             "caminho": caminho,
             "distancia": distancia,
