@@ -1,7 +1,10 @@
 from algorithms.profundidade_limitada import profundidade_limitada
 from data.cities_graph import cidades_vizinhas
+from fastapi import APIRouter
 
+router = APIRouter()
 
+@router.get("/profundidade_limitada")
 def executar_profundidade(inicio, objetivo, limite=10):
     resultado = profundidade_limitada(
         cidades_vizinhas,
