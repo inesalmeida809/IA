@@ -1,4 +1,4 @@
-from ...data.cities_graph import cidades_vizinhas
+from data.cities_graph import cidades_vizinhas
 from .calcular_heuristica import calcular_heuristica
 
 def procura_sofrega(cidade_origem, cidade_destino):
@@ -25,10 +25,4 @@ def procura_sofrega(cidade_origem, cidade_destino):
         caminho.append(cidade_atual)
     print(f"\nCaminho final: {caminho}")
     print(f"Distância: {distancia}")
-    return caminho
-
-
-if __name__ == "__main__":
-    origem = "Coimbra"
-    destino = "Faro"
-    caminho_encontrado = procura_sofrega(origem, destino)
+    return caminho,distancia

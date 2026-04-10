@@ -2,7 +2,7 @@
 
 import math
 
-from ...data.city_coordinates import coordenadas
+from data.city_coordinates import coordenadas
 
 def calcular_heuristica(cidade_atual, cidade_destino):
     lat1, lon1 = coordenadas[cidade_atual]
