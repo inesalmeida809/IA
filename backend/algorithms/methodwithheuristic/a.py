@@ -1,4 +1,4 @@
-from ...data.cities_graph import cidades_vizinhas
+from data.cities_graph import cidades_vizinhas
 from .calcular_heuristica import calcular_heuristica
 from heapq import heappush, heappop
 
@@ -23,7 +23,7 @@ def a_star(partida, destino):
         _, atual = heappop(fila_aberta)
 
         if atual == destino:
-            return {"caminho": reconstruir_caminho(pais, destino), "custo": g_score[destino]}
+            return reconstruir_caminho(pais, destino), g_score[destino]
         if atual in fila_fechada:
             continue
         fila_fechada.add(atual)
@@ -37,4 +37,4 @@ def a_star(partida, destino):
                 f_score[vizinho] = tentative_g_score + calcular_heuristica(vizinho, destino)
                 heappush(fila_aberta, (f_score[vizinho], vizinho))
 
-    return {"caminho": [], "custo": None}
+    return [], None
