@@ -6,6 +6,7 @@ from services.custo_uniforme_service import router as custo_uniforme_router
 from services.profundidade_limitada_service import router as procura_limitada_router
 from services.a_service import router as a_service_router
 
+
 app = FastAPI()
 
 
@@ -28,8 +29,3 @@ def login(file: UploadFile = File(...)):
         "matricula": matricula,
         "mensagem": "Login efetuado"
     }
-
-
-@app.get("/search")
-def search(algoritmo: str, inicio: str, destino: str):
-    return executar_busca(algoritmo, inicio, destino)
