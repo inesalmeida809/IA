@@ -18,6 +18,7 @@ def detectar_matricula(caminho_img):
     for r in results:
         for box in r.boxes:
             conf = float(box.conf[0])
+
             if conf > melhor_conf:
                 melhor_conf = conf
 
@@ -26,6 +27,7 @@ def detectar_matricula(caminho_img):
 
                 pad_x = int((x2 - x1) * 0.05)
                 pad_y = int((y2 - y1) * 0.1)
+
                 x1 = max(0, x1 - pad_x)
                 y1 = max(0, y1 - pad_y)
                 x2 = min(w, x2 + pad_x)
@@ -33,17 +35,26 @@ def detectar_matricula(caminho_img):
 
                 crop = img[y1:y2, x1:x2]
 
-                # zoom moderado — só uma vez, aqui
-                crop = cv2.resize(crop, None, fx=2, fy=2,
-                                  interpolation=cv2.INTER_CUBIC)
+                
+                crop = cv2.resize(
+                    crop, None, fx=3, fy=3,
+                    interpolation=cv2.INTER_CUBIC
+                )
 
-                # CLAHE em vez de equalizeHist — muito mais suave
+               
                 gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+
+           
                 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
                 gray = clahe.apply(gray)
 
-                # Paddle precisa de 3 canais, mas em BGR (não em RGB)
-                crop = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+               
+                _, thresh = cv2.threshold(
+                    gray, 0, 255,
+                    cv2.THRESH_BINARY + cv2.THRESH_OTSU
+                )
+
+                crop = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
                 melhor_crop = crop
 
@@ -55,11 +66,16 @@ def detectar_matricula(caminho_img):
 
 def validar_matricula(texto):
     padroes = [
-        r"[A-Z]{2}[0-9]{2}[A-Z]{2}",  
-        r"[0-9]{2}[A-Z]{2}[0-9]{2}",  
-        r"[A-Z]{2}[0-9]{4}",           
+        r"[A-Z]{2}[0-9]{2}[A-Z]{2}",
+        r"[0-9]{2}[A-Z]{2}[0-9]{2}",
+        r"[A-Z]{2}[0-9]{4}",
+        r"[0-9]{4}[A-Z]{2}",
+        r"[A-Z]{4}[0-9]{2}",
+        r"[0-9]{2}[A-Z]{4}"
     ]
+
     for p in padroes:
         if re.fullmatch(p, texto):
             return True
+
     return False
