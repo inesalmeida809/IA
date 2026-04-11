@@ -4,12 +4,12 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.get("/profundidade_limitada")
-def executar_profundidade(inicio, objetivo, limite=10):
+@router.get("/profundidade-limitada")
+def executar_profundidade(partida, destino, limite=10):
     resultado = profundidade_limitada(
         cidades_vizinhas,
-        inicio,
-        objetivo,
+        partida,
+        destino,
         limite
     )
     
