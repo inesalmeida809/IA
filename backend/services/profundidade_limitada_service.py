@@ -6,20 +6,13 @@ router = APIRouter()
 
 @router.get("/profundidade-limitada")
 def profundidade_limitada_service(partida, destino, limite=10):
-    resultado = profundidade_limitada(
-        cidades_vizinhas,
-        partida,
-        destino,
-        limite
-    )
+    caminho, custo, iteracoes, coordenadas =  profundidade_limitada(cidades_vizinhas, partida, destino, limite)
     
-    if resultado:
-        caminho, custo, iteracoes = resultado
+    if caminho is not None and custo is not None and coordenadas is not None:
         return {
-            "algoritmo": "profundidade_limitada",
             "caminho": caminho,
             "custo": custo,
-            "iteracoes": iteracoes
+            "coordenadas": coordenadas,
         }
     else:
         return {
