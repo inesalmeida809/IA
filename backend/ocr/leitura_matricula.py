@@ -4,7 +4,7 @@ import cv2
 import re
 import easyocr
 
-reader = easyocr.Reader(['en'])
+reader = easyocr.Reader(['en'], gpu=False)
 
 
 def formatar_matricula(texto):
@@ -37,6 +37,8 @@ def ler_matricula(file):
 
    
     h, w, _ = plate.shape
+    corte_esquerdo = int(w * 0.10)
+    corte_direito = int(w * 0.88)
     plate = plate[:, int(w * 0.2):]
 
  
@@ -44,7 +46,7 @@ def ler_matricula(file):
 
     if resultados:
      
-        texto = max(resultados, key=lambda x: x[2])[1]
+        texto = "".join([res[1] for res in resultados])
     else:
         texto = ""
 
