@@ -5,23 +5,20 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/profundidade-limitada")
-def profundidade_limitada_service(partida: str, destino: str, limite: int = 10 ):
-    resultado = profundidade_limitada(
-        cidades_vizinhas,
-        partida,
-        destino,
-        limite
+def profundidade_limitada_service(partida: str, destino: str, limite: int = 10):
+    caminho, custo, iteracoes, coordenadas = profundidade_limitada(
+        cidades_vizinhas, partida, destino, limite
     )
-    
-    if resultado:
-        caminho, custo, iteracoes = resultado
+
+    if caminho and custo is not None:
         return {
             "algoritmo": "profundidade_limitada",
             "caminho": caminho,
             "custo": custo,
-            "iteracoes": iteracoes
+            "iteracoes": iteracoes,
+            "coordenadas": coordenadas
         }
-    else:
-        return {
-            "erro": "Nenhum caminho encontrado dentro do limite"
-        }
+
+    return {
+        "erro": "Nenhum caminho encontrado dentro do limite"
+    }
