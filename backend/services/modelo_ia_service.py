@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/atracoes_monumentos")
 def atracoes_e_monumentos_service(request: Request, cidades: List[str] = Query(...)):
 
-    motor_llm = request.app.state.llm
+    motor_llm = getattr(request.app.state, "llm", None)
     if not motor_llm:
         return {"erro": "O modelo IA não está carregado no servidor."}
 
