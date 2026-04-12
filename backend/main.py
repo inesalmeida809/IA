@@ -5,7 +5,7 @@ from services.procura_sofrega_service import router as procura_sofrega_router
 from services.custo_uniforme_service import router as custo_uniforme_router
 from services.profundidade_limitada_service import router as procura_limitada_router
 from services.a_service import router as a_service_router
-from services.cities import router as cities_router
+from services.cities_service import router as cities_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
