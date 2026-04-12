@@ -1,4 +1,4 @@
-from services.detecao_matricula import detectar_matricula
+from services.detecao_matricula_service import detectar_matricula
 
 import cv2
 import re

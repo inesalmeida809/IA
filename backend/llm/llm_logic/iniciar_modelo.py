@@ -11,10 +11,10 @@ caminho_completo = os.path.join(pasta_modelo, ficheiro_model)
 
 def iniciar_modelo():
     if not os.path.exists(caminho_completo):
-        print("Erro: O modelo não foi encontrado.")
+        print("\n\nErro: O modelo não foi encontrado.")
         return
 
-    print("🤖 A carregar o modelo...")
+    print("\n\nA carregar o modelo...")
     
     llm = Llama(
         model_path=caminho_completo,
@@ -24,4 +24,4 @@ def iniciar_modelo():
         verbose=False
     )
 
-return llm
+    return llm

@@ -1,18 +1,18 @@
 import os
 import json
-from llama_cpp import Llama
 
+pasta_llm_logic = os.path.dirname(os.path.abspath(__file__))
 ficheiro_dados = os.path.join(pasta_llm_logic, "monumentos.json")
 
 def carregar_dados_monumentos():
     if not os.path.exists(ficheiro_dados):
-        print("Erro: Ficheiro monumentos.json não encontrado.")
+        print("\n\nErro: Ficheiro monumentos.json não encontrado.")
         return {}
     
     with open(ficheiro_dados, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def testar(distritos_a_testar):
+def atracoes_monumentos(llm, distritos_a_testar):
 
     base_dados = carregar_dados_monumentos()
 
@@ -22,7 +22,7 @@ def testar(distritos_a_testar):
         informacao_real = base_dados.get(distrito.capitalize(), None)
 
         if not informacao_real:
-            print(f"Não temos dados no ficheiro para o distrito: {distrito}")
+            print(f"\n\nNão temos dados no ficheiro para o distrito: {distrito}")
             return []
 
         messages = [
