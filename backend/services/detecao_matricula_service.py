@@ -1,8 +1,33 @@
 from ultralytics import YOLO
 import cv2
-import re
+import numpy as np
 
 model = YOLO("license_plate_detector.pt")
+
+
+def preprocessar_para_ocr(crop):
+
+    crop = cv2.resize(crop, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_LANCZOS4)
+
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+
+    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
+    clahe_img = clahe.apply(gray)
+
+    adaptive = cv2.adaptiveThreshold(
+        clahe_img, 255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY, 15, 8
+    )
+
+    _, otsu = cv2.threshold(clahe_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+  
+    return [
+        cv2.cvtColor(clahe_img, cv2.COLOR_GRAY2BGR),    
+        cv2.cvtColor(adaptive, cv2.COLOR_GRAY2BGR),     
+        cv2.cvtColor(otsu, cv2.COLOR_GRAY2BGR),          
+    ]
 
 
 def detectar_matricula(caminho_img):
@@ -23,8 +48,9 @@ def detectar_matricula(caminho_img):
                 melhor_conf = conf
 
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
-                h, w, _ = img.shape
+                h, w = img.shape[:2]
 
+                
                 pad_x = int((x2 - x1) * 0.05)
                 pad_y = int((y2 - y1) * 0.1)
 
@@ -33,49 +59,9 @@ def detectar_matricula(caminho_img):
                 x2 = min(w, x2 + pad_x)
                 y2 = min(h, y2 + pad_y)
 
-                crop = img[y1:y2, x1:x2]
-
-                
-                crop = cv2.resize(
-                    crop, None, fx=3, fy=3,
-                    interpolation=cv2.INTER_CUBIC
-                )
-
-               
-                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-
-           
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
-                gray = clahe.apply(gray)
-
-               
-                _, thresh = cv2.threshold(
-                    gray, 0, 255,
-                    cv2.THRESH_BINARY + cv2.THRESH_OTSU
-                )
-
-                crop = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
-
-                melhor_crop = crop
+                melhor_crop = img[y1:y2, x1:x2].copy()
 
     if melhor_crop is not None:
-        cv2.imwrite("debug_plate.jpg", melhor_crop)
+        cv2.imwrite("debug_plate_raw.jpg", melhor_crop)
 
-    return melhor_crop
-
-
-def validar_matricula(texto):
-    padroes = [
-        r"[A-Z]{2}[0-9]{2}[A-Z]{2}",
-        r"[0-9]{2}[A-Z]{2}[0-9]{2}",
-        r"[A-Z]{2}[0-9]{4}",
-        r"[0-9]{4}[A-Z]{2}",
-        r"[A-Z]{4}[0-9]{2}",
-        r"[0-9]{2}[A-Z]{4}"
-    ]
-
-    for p in padroes:
-        if re.fullmatch(p, texto):
-            return True
-
-    return False
+    return melhor_crop  
