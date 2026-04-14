@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 
 # --- IMPORTS DO LLM ---
 from llm.llm_logic.download_modelo import verificar_instalar_modelo
@@ -17,23 +18,27 @@ from services.a_service import router as a_service_router
 from services.cities_service import router as cities_router
 from services.modelo_ia_service import router as modelo_ia_router
 
-modelo_ia = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global modelo_ia
-    
-    verificar_instalar_modelo()
-    
-    app.state.llm = iniciar_modelo()
-    
-    if app.state.llm:
-        print("Motor IA ligado com sucesso e pronto para a API!")
-    
-    yield 
-    
-    print("A limpar a memória da IA...")
     app.state.llm = None
+    
+    modelo_pronto = verificar_instalar_modelo()
+
+    if modelo_pronto:
+        print("A iniciar o motor IA...")
+        app.state.llm = iniciar_modelo()
+        if app.state.llm:
+            print("Motor IA ligado com sucesso e pronto para a API!")
+    else:
+        print("Arranque a prosseguir sem o LLM")
+
+    yield 
+
+    if app.state.llm:
+        print("A limpar a memória da IA...")
+        app.state.llm = None
+    
 
 app = FastAPI(lifespan=lifespan)
 

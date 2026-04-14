@@ -27,9 +27,12 @@ def verificar_instalar_modelo():
                         local_dir=pasta_modelo
                 )
                 print("Download concluído com sucesso!\n")
+                return True
             except Exception as e:
                 print(f"\n\nOcorreu um erro durante o download: {e}")
                 sys.exit(1)
                 
         else:
-            print("\n\nOperação cancelada. O servidor não vai conseguir iniciar sem o modelo.")
+            return False
+    else:
+        return True
