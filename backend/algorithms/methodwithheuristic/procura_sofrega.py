@@ -1,10 +1,12 @@
 from data.cities_graph import cidades_vizinhas
 from .calcular_heuristica import calcular_heuristica
+from data.city_coordinates import coordenadas
 
 def procura_sofrega(cidade_origem, cidade_destino):
     caminho = [cidade_origem]
     cidade_atual = cidade_origem
     distancia = 0
+    coordenadas_cidades = [coordenadas.get(cidade_origem)]
 
     print(f"A iniciar procura sofrega de {cidade_origem} para {cidade_destino}")
 
@@ -23,6 +25,7 @@ def procura_sofrega(cidade_origem, cidade_destino):
 
         cidade_atual = proxima_cidade
         caminho.append(cidade_atual)
+        coordenadas_cidades.append(coordenadas.get(cidade_atual))
     print(f"\nCaminho final: {caminho}")
     print(f"Distância: {distancia}")
-    return caminho,distancia
+    return caminho, distancia, coordenadas_cidades
