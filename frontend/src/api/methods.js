@@ -40,13 +40,17 @@ export const custo_uniforme = async (partida, destino) => {
     }
 }
 
-export const profundidade_limitada = async (partida, destino) => {
+export const profundidade_limitada = async (partida, destino, limite = null) => {
     try {
+        const params = {
+            partida,
+            destino
+        };
+        if (limite !== null) {
+            params.limite = limite;
+        }
         const response = await axios.get(`${url}profundidade-limitada`, {
-            params: {
-                partida,
-                destino
-            }
+            params
         });
         return response.data;
     } catch (error) {

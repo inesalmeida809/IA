@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router';
 import { a_star, custo_uniforme, profundidade_limitada, procura_sofrega, get_cities } from '../api/methods';
+import { get_atracoes } from '../api/atracoes';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -10,6 +11,10 @@ function Search() {
     const [matriculaLida, setMatriculaLida] = useState("");
     const [pathResult, setPathResult] = useState(null);
     const [loadingPath, setLoadingPath] = useState(false);
+    const [profundidadeLimite, setProfundidadeLimite] = useState("");
+    const [selectedMethod, setSelectedMethod] = useState("");
+    const [atracoes, setAtracoes] = useState(null);
+    const [loadingAtracoes, setLoadingAtracoes] = useState(false);
     const location = useLocation();
 
     const fetch_cities = async () => {
@@ -23,7 +28,21 @@ function Search() {
         }
     }
 
-    const fetch_path = async (method, origem, destino) => {
+    const fetch_atracoes = async (cidades) => {
+        try {
+            setLoadingAtracoes(true);
+            const response = await get_atracoes(cidades);
+            console.log("Atrações recebidas:", response);
+            setAtracoes(response);
+        } catch (error) {
+            console.error("Erro ao buscar atrações:", error);
+            setAtracoes(null);
+        } finally {
+            setLoadingAtracoes(false);
+        }
+    }
+
+    const fetch_path = async (method, origem, destino, limite = null) => {
         try {
             setLoadingPath(true);
             let response;
@@ -32,7 +51,7 @@ function Search() {
             } else if (method == "custo_uniforme") {
                 response = await custo_uniforme(origem, destino);
             } else if (method == "profundidade_limitada") {
-                response = await profundidade_limitada(origem, destino);
+                response = await profundidade_limitada(origem, destino, limite || null);
             } else if (method == "procura_sofrega") {
                 response = await procura_sofrega(origem, destino);
             } else {
@@ -57,6 +76,12 @@ function Search() {
 
         fetch_cities();
     }, [location.state]);
+
+    useEffect(() => {
+        if (pathResult?.caminho) {
+            fetch_atracoes(pathResult.caminho);
+        }
+    }, [pathResult]);
 
     // Converte o caminho devolvido pelo backend em coordenadas para o mapa
     const polylinePositions = useMemo(() => {
@@ -95,7 +120,8 @@ function Search() {
                             return;
                         } else {
                             setError("");
-                            fetch_path(method, origem, destino);
+                            const limite = method === "profundidade_limitada" ? (profundidadeLimite || null) : null;
+                            fetch_path(method, origem, destino, limite);
                         }
                     }}
                     className="space-y-5 p-6"
@@ -149,6 +175,10 @@ function Search() {
                             name="method"
                             id="method"
                             defaultValue=""
+                            onChange={(e) => {
+                                setSelectedMethod(e.target.value);
+                                setProfundidadeLimite("");
+                            }}
                             className="w-full rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-gray-800 outline-none transition duration-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-100"
                         >
                             <option value="" disabled>
@@ -160,6 +190,26 @@ function Search() {
                             <option value="procura_sofrega">Procura Sofrega</option>
                         </select>
                     </div>
+
+                    {selectedMethod === "profundidade_limitada" && (
+                        <div>
+                            <label htmlFor="profundidade" className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                Limite de Profundidade
+                                <span className="text-xs font-normal text-gray-500">(Opcional - padrão: 10)</span>
+                            </label>
+                            <input
+                                type="number"
+                                name="profundidade"
+                                id="profundidade"
+                                min="1"
+                                defaultValue=""
+                                placeholder="Deixe em branco para usar o valor padrão (10)"
+                                value={profundidadeLimite}
+                                onChange={(e) => setProfundidadeLimite(e.target.value ? parseInt(e.target.value) : "")}
+                                className="w-full rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-gray-800 outline-none transition duration-200 focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                            />
+                        </div>
+                    )}
                     {error && (
                         <div className="mb-4 flex items-start gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
                             <span className="text-lg">⚠️</span>
@@ -198,43 +248,79 @@ function Search() {
             )}
 
             <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Mapa do Caminho</h3>
-                <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-lg">
-                    <MapContainer
-                        center={mapCenter}
-                        zoom={7}
-                        scrollWheelZoom={true}
-                        style={{ height: '500px', width: '100%' }}
-                    >
-                        <TileLayer
-                            attribution='&copy; OpenStreetMap contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-
-                        {pathResult?.caminho && pathResult?.coordenadas && pathResult.caminho.map((cityName, index) => {
-                            const position = pathResult.coordenadas[index];
-                            if (!position) return null;
-
-                            return (
-                                <Marker key={`${cityName}-${index}`} position={[position[0], position[1]]}>
-                                    <Popup>
-                                        <strong>{cityName}</strong>
-                                        {index === 0 && ' (Origem)'}
-                                        {index === pathResult.caminho.length - 1 && ' (Destino)'}
-                                    </Popup>
-                                </Marker>
-                            );
-                        })}
-
-                        {polylinePositions.length > 1 && (
-                            <Polyline
-                                positions={polylinePositions}
-                                color="blue"
-                                weight={4}
-                                opacity={0.7}
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Mapa do Caminho e Atrações</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Mapa - ocupa 2 colunas em desktop, 1 em mobile */}
+                    <div className="lg:col-span-2 rounded-2xl overflow-hidden border border-gray-200 shadow-lg">
+                        <MapContainer
+                            center={mapCenter}
+                            zoom={7}
+                            scrollWheelZoom={true}
+                            style={{ height: '500px', width: '100%' }}
+                        >
+                            <TileLayer
+                                attribution='&copy; OpenStreetMap contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
-                        )}
-                    </MapContainer>
+
+                            {pathResult?.caminho && pathResult?.coordenadas && pathResult.caminho.map((cityName, index) => {
+                                const position = pathResult.coordenadas[index];
+                                if (!position) return null;
+
+                                return (
+                                    <Marker key={`${cityName}-${index}`} position={[position[0], position[1]]}>
+                                        <Popup>
+                                            <strong>{cityName}</strong>
+                                            {index === 0 && ' (Origem)'}
+                                            {index === pathResult.caminho.length - 1 && ' (Destino)'}
+                                        </Popup>
+                                    </Marker>
+                                );
+                            })}
+
+                            {polylinePositions.length > 1 && (
+                                <Polyline
+                                    positions={polylinePositions}
+                                    color="blue"
+                                    weight={4}
+                                    opacity={0.7}
+                                />
+                            )}
+                        </MapContainer>
+                    </div>
+
+                    {/* Painel de Atrações */}
+                    <div className="rounded-2xl border border-orange-100 bg-orange-50 shadow-lg overflow-hidden">
+                        <div className="p-4 bg-orange-500 text-white">
+                            <h3 className="text-lg font-bold">Atrações e Monumentos</h3>
+                        </div>
+                        
+                        <div className="p-4 overflow-y-auto" style={{ height: '500px' }}>
+                            {loadingAtracoes ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                                        <p className="text-sm text-orange-600">A carregar atrações...</p>
+                                    </div>
+                                </div>
+                            ) : atracoes ? (
+                                <div className="space-y-4">
+                                    {Object.entries(atracoes).map(([cidade, atracao]) => (
+                                        <div key={cidade} className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-orange-400 hover:shadow-md transition-shadow">
+                                            <h4 className="font-bold text-orange-700 mb-1 text-sm">{cidade}</h4>
+                                            <p className="text-sm text-gray-700 leading-relaxed">
+                                                {typeof atracao === 'string' ? atracao : JSON.stringify(atracao)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-center text-gray-500">
+                                    <p className="text-sm">Pesquise um caminho para ver as atrações das cidades</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
