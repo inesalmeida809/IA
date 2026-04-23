@@ -303,14 +303,19 @@ function Search() {
                                         <p className="text-sm text-orange-600">A carregar atrações...</p>
                                     </div>
                                 </div>
-                            ) : atracoes ? (
-                                <div className="space-y-4">
-                                    {Object.entries(atracoes).map(([cidade, atracao]) => (
-                                        <div key={cidade} className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-orange-400 hover:shadow-md transition-shadow">
-                                            <h4 className="font-bold text-orange-700 mb-1 text-sm">{cidade}</h4>
-                                            <p className="text-sm text-gray-700 leading-relaxed">
-                                                {typeof atracao === 'string' ? atracao : JSON.stringify(atracao)}
-                                            </p>
+                            ) : atracoes && atracoes.length > 0 ? (
+                                <div className="space-y-5">
+                                    {atracoes.map((item) => (
+                                        <div key={item.distrito} className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-400 hover:shadow-md transition-shadow">
+                                            <h4 className="font-semibold text-orange-700 mb-3 text-sm uppercase tracking-wide">{item.distrito}</h4>
+                                            <div className="space-y-3">
+                                                {item.atracoes?.map((atracao, index) => (
+                                                    <div key={`${item.distrito}-${index}`} className="rounded-2xl bg-orange-50 p-3">
+                                                        <p className="font-semibold text-gray-900">{atracao.nome}</p>
+                                                        <p className="text-sm text-gray-600 leading-relaxed mt-1">{atracao.descricao}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
