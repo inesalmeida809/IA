@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginWithImage } from "../api/login";
+import { save_plate } from "../api/history";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -47,13 +48,20 @@ const Login = () => {
         return;
       }
 
+      try {
+        await save_plate(matriculaLida);
+      } catch (saveError) {
+        console.error("Erro ao salvar matrícula no backend:", saveError);
+      }
+
       setMatricula(matriculaLida);
       setMensagem(data.mensagem || "Pedido concluído com sucesso.");
-      sessionStorage.setItem("matricula", matriculaLida);
-      navigate("/search");
+      localStorage.setItem("matricula", matriculaLida);
+      navigate("/search", { state: { matricula: matriculaLida } });
     } catch (error) {
       console.error(error);
-      setErro("Não foi possível ler a matrícula.");
+      const backendMessage = error?.response?.data?.detail || error?.message;
+      setErro(backendMessage || "Não foi possível ler a matrícula.");
     } finally {
       setLoading(false);
     }

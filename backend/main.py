@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
+from fastapi import HTTPException
 
 # --- IMPORTS DO LLM ---
 from llm.llm_logic.download_modelo import verificar_instalar_modelo
@@ -62,10 +63,27 @@ app.include_router(save_history_router)
 
 @app.post("/login")
 def login(file: UploadFile = File(...)):
-    matricula = ler_matricula(file)
+    resultado = ler_matricula(file)
+
+    if "erro" in resultado:
+        erro = resultado["erro"]
+
+        if erro == "MATRICULA_NAO_ENCONTRADA":
+            raise HTTPException(status_code=404, detail="Matrícula não encontrada")
+
+        elif erro == "OCR_SEM_RESULTADO":
+            raise HTTPException(status_code=422, detail="Não foi possível ler a matrícula")
+
+        elif erro.startswith("TEXTO_INCOMPLETO"):
+            raise HTTPException(status_code=422, detail=erro)
+
+        else:
+            raise HTTPException(status_code=400, detail=erro)
     
     return {
-        "matricula": matricula,
+        "matricula": resultado["matricula"],
+        "valida": resultado["valida"],
+        "texto_bruto": resultado["texto_bruto"],
         "mensagem": "Login efetuado"
     }
 
