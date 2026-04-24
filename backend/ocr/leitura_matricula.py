@@ -24,13 +24,14 @@ PADROES_TIPO = [
     "DDDDLL",
 ]
 
+PADRAO_PRIORITARIO = "LLDDLL"
+ACEITAR_APENAS_PADRAO_PRIORITARIO = False
+
 LETRA_PARA_DIGITO = {
     'O': '0',
     'I': '1',
     'Z': '2',
     'S': '5',
-    'B': '8',
-    'G': '6',
 }
 
 DIGITO_PARA_LETRA = {
@@ -38,18 +39,17 @@ DIGITO_PARA_LETRA = {
     '1': 'I',
     '2': 'Z',
     '5': 'S',
-    '8': 'B',
-    '6': 'G',
 }
 
 
 def corrigir_confusoes_ocr(texto, padrao_tipo):
     """Ajusta caracteres ambíguos (O/0, I/1, ...) conforme o padrão esperado."""
     if len(texto) != 6:
-        return None, -1
+        return None, -1, 99
 
     convertido = []
     pontuacao = 0
+    conversoes = 0
 
     for i, char in enumerate(texto):
         esperado = padrao_tipo[i]
@@ -61,8 +61,9 @@ def corrigir_confusoes_ocr(texto, padrao_tipo):
             elif char in LETRA_PARA_DIGITO:
                 convertido.append(LETRA_PARA_DIGITO[char])
                 pontuacao += 1
+                conversoes += 1
             else:
-                return None, -1
+                return None, -1, 99
         else:
             if char.isalpha():
                 convertido.append(char)
@@ -70,10 +71,23 @@ def corrigir_confusoes_ocr(texto, padrao_tipo):
             elif char in DIGITO_PARA_LETRA:
                 convertido.append(DIGITO_PARA_LETRA[char])
                 pontuacao += 1
+                conversoes += 1
             else:
-                return None, -1
+                return None, -1, 99
 
-    return ''.join(convertido), pontuacao
+    return ''.join(convertido), pontuacao, conversoes
+
+
+def inferir_padrao_prioritario(texto_limpo):
+    if len(texto_limpo) < 2:
+        return None
+
+    prefixo = texto_limpo[:2]
+    if prefixo.isdigit():
+        return "DDLLDD"
+    if prefixo.isalpha():
+        return "LLDDLL"
+    return None
 
 
 def gerar_candidatos(texto_limpo):
@@ -86,7 +100,7 @@ def gerar_candidatos(texto_limpo):
 
     for j, janela in enumerate(janelas):
         for padrao_tipo in PADROES_TIPO:
-            corrigido, pontos_padrao = corrigir_confusoes_ocr(janela, padrao_tipo)
+            corrigido, pontos_padrao, conversoes = corrigir_confusoes_ocr(janela, padrao_tipo)
             if not corrigido:
                 continue
 
@@ -94,6 +108,8 @@ def gerar_candidatos(texto_limpo):
             candidatos.append({
                 "texto": corrigido,
                 "pontos_padrao": pontos_padrao,
+                "conversoes": conversoes,
+                "padrao_tipo": padrao_tipo,
                 "valido": valido,
             })
             if valido:
@@ -103,6 +119,9 @@ def gerar_candidatos(texto_limpo):
 
 
 def validar_matricula(texto):
+    if ACEITAR_APENAS_PADRAO_PRIORITARIO:
+        return bool(re.fullmatch(PADROES[0], texto))
+
     for p in PADROES:
         if re.fullmatch(p, texto):
             return True
@@ -138,12 +157,16 @@ def tentar_ocr_em_variantes(variantes):
         print(f"[DEBUG] Variante {i}: texto_completo='{texto_completo}' -> texto_limpo='{texto_limpo}' (confiança: {confianca_media:.2f})")
         candidatos_locais = gerar_candidatos(texto_limpo)
         print(f"[DEBUG] Variante {i}: {len(candidatos_locais)} candidatos gerados")
+        padrao_inferido = inferir_padrao_prioritario(texto_limpo)
 
         for c in candidatos_locais:
             candidatos.append({
                 "texto": c["texto"],
                 "confianca": confianca_media,
                 "pontos_padrao": c["pontos_padrao"],
+                "conversoes": c["conversoes"],
+                "padrao_tipo": c["padrao_tipo"],
+                "padrao_inferido": padrao_inferido,
                 "valido": c["valido"],
                 "variante": i,
             })
@@ -156,13 +179,27 @@ def tentar_ocr_em_variantes(variantes):
 
     validos = [c for c in candidatos if c["valido"]]
     if validos:
-        melhor = max(validos, key=lambda x: (x["pontos_padrao"], x["confianca"]))
+        if ACEITAR_APENAS_PADRAO_PRIORITARIO:
+            validos_prioritarios = [c for c in validos if c["padrao_tipo"] == PADRAO_PRIORITARIO]
+            if not validos_prioritarios:
+                print("[DEBUG] Nenhum candidato válido no padrão prioritário LLDDLL")
+                return None
+            melhor = max(validos_prioritarios, key=lambda x: (-x["conversoes"], x["pontos_padrao"], x["confianca"]))
+        else:
+            melhor = max(
+                validos,
+                key=lambda x: (
+                    x.get("padrao_inferido") == x["padrao_tipo"],
+                    -x["conversoes"],
+                    x["pontos_padrao"],
+                    x["confianca"],
+                ),
+            )
         print(f"[DEBUG] Matrícula válida selecionada: {melhor['texto']} (pontos: {melhor['pontos_padrao']}, confiança: {melhor['confianca']:.2f})")
         return melhor["texto"]
 
-    melhor = max(candidatos, key=lambda x: (x["pontos_padrao"], x["confianca"]))
-    print(f"[DEBUG] Nenhuma matrícula válida, selecionando melhor candidato: {melhor['texto']} (pontos: {melhor['pontos_padrao']}, confiança: {melhor['confianca']:.2f})")
-    return melhor["texto"]
+    print("[DEBUG] Nenhuma matrícula válida após avaliação dos candidatos")
+    return None
 
 
 def formatar_matricula(texto):
