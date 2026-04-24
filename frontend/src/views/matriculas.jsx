@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginWithImage } from "../api/login";
-import { save_plate } from "../api/history";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,33 +34,31 @@ const Login = () => {
     try {
       setLoading(true);
       setErro("");
-      setMatricula("");
       setMensagem("");
+      setMatricula("");
 
       const data = await loginWithImage(imagem);
-      const matriculaLida = typeof data.matricula === 'string' ? data.matricula.trim() : "";
 
-      if (!matriculaLida) {
-        setErro(data.mensagem || "Matrícula não encontrada. Tente outra imagem.");
-        setMensagem("");
-        setMatricula("");
-        return;
-      }
+      console.log(data);
 
-      try {
-        await save_plate(matriculaLida);
-      } catch (saveError) {
-        console.error("Erro ao salvar matrícula no backend:", saveError);
-      }
+      const matriculaLida =
+        data?.matricula?.matricula ||
+        data?.matricula ||
+        "";
 
-      setMatricula(matriculaLida);
-      setMensagem(data.mensagem || "Pedido concluído com sucesso.");
-      localStorage.setItem("matricula", matriculaLida);
-      navigate("/search", { state: { matricula: matriculaLida } });
+      const valorFinal = String(matriculaLida).trim();
+
+      setMatricula(valorFinal);
+      setMensagem(data?.mensagem || "Login efetuado");
+
+      sessionStorage.setItem("matricula", valorFinal);
+
+      navigate("/search", {
+        state: { matricula: valorFinal },
+      });
     } catch (error) {
       console.error(error);
-      const backendMessage = error?.response?.data?.detail || error?.message;
-      setErro(backendMessage || "Não foi possível ler a matrícula.");
+      setErro("Não foi possível ler a matrícula.");
     } finally {
       setLoading(false);
     }
@@ -71,7 +68,9 @@ const Login = () => {
     <div className="flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="bg-primary text-white px-6 py-5">
-          <h1 className="text-2xl md:text-3xl font-bold">Leitor de matrículas</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Leitor de matrículas
+          </h1>
           <p className="text-sm md:text-base mt-1 opacity-90">
             Envie uma foto do veículo para extrair a matrícula automaticamente.
           </p>
@@ -94,7 +93,9 @@ const Login = () => {
 
             {preview && (
               <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50">
-                <p className="text-sm font-medium text-slate-700 mb-3">Pré-visualização</p>
+                <p className="text-sm font-medium text-slate-700 mb-3">
+                  Pré-visualização
+                </p>
                 <img
                   src={preview}
                   alt="Preview da matrícula"

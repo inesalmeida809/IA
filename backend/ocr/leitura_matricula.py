@@ -17,29 +17,85 @@ PADROES = [
     r"[0-9]{4}[A-Z]{2}",          
 ]
 
+PADROES_TIPO = [
+    "LLDDLL",
+    "DDLLDD",
+    "LLDDDD",
+    "DDDDLL",
+]
 
-def corrigir_confusoes_ocr(texto):
-    """Corrige confusões comuns do OCR em contexto de matrícula."""
-    correcoes = {
-        'O': '0',  
-        'I': '1',
-        'Z': '2',
-        'S': '5',
-        'B': '8',
-        'G': '6',
-    }
+LETRA_PARA_DIGITO = {
+    'O': '0',
+    'I': '1',
+    'Z': '2',
+    'S': '5',
+    'B': '8',
+    'G': '6',
+}
 
-  
-    resultado = list(texto[:6].ljust(6))
-    for i, c in enumerate(resultado):
-        if i in (2, 3):  
-            if c in correcoes:
-                resultado[i] = correcoes[c]
-        elif i in (0, 1, 4, 5):  
-            if c.isdigit():
-                inv = {'0': 'O', '1': 'I', '2': 'Z', '5': 'S', '8': 'B', '6': 'G'}
-                resultado[i] = inv.get(c, c)
-    return ''.join(resultado)
+DIGITO_PARA_LETRA = {
+    '0': 'O',
+    '1': 'I',
+    '2': 'Z',
+    '5': 'S',
+    '8': 'B',
+    '6': 'G',
+}
+
+
+def corrigir_confusoes_ocr(texto, padrao_tipo):
+    """Ajusta caracteres ambíguos (O/0, I/1, ...) conforme o padrão esperado."""
+    if len(texto) != 6:
+        return None, -1
+
+    convertido = []
+    pontuacao = 0
+
+    for i, char in enumerate(texto):
+        esperado = padrao_tipo[i]
+
+        if esperado == 'D':
+            if char.isdigit():
+                convertido.append(char)
+                pontuacao += 2
+            elif char in LETRA_PARA_DIGITO:
+                convertido.append(LETRA_PARA_DIGITO[char])
+                pontuacao += 1
+            else:
+                return None, -1
+        else:
+            if char.isalpha():
+                convertido.append(char)
+                pontuacao += 2
+            elif char in DIGITO_PARA_LETRA:
+                convertido.append(DIGITO_PARA_LETRA[char])
+                pontuacao += 1
+            else:
+                return None, -1
+
+    return ''.join(convertido), pontuacao
+
+
+def gerar_candidatos(texto_limpo):
+    if len(texto_limpo) < 6:
+        return []
+
+    janelas = [texto_limpo[i:i + 6] for i in range(0, len(texto_limpo) - 5)]
+    candidatos = []
+
+    for janela in janelas:
+        for padrao_tipo in PADROES_TIPO:
+            corrigido, pontos_padrao = corrigir_confusoes_ocr(janela, padrao_tipo)
+            if not corrigido:
+                continue
+
+            candidatos.append({
+                "texto": corrigido,
+                "pontos_padrao": pontos_padrao,
+                "valido": validar_matricula(corrigido),
+            })
+
+    return candidatos
 
 
 def validar_matricula(texto):
@@ -65,18 +121,25 @@ def tentar_ocr_em_variantes(variantes):
         if not resultados:
             continue
 
-        texto_completo = "".join([r[1] for r in resultados])
+        resultados_ordenados = sorted(
+            resultados,
+            key=lambda r: min([p[0] for p in r[0]])
+        )
+
+        texto_completo = "".join([r[1] for r in resultados_ordenados])
         confianca_media = sum([r[2] for r in resultados]) / len(resultados)
 
         texto_limpo = re.sub(r'[^A-Z0-9]', '', texto_completo.upper())
-        texto_corrigido = corrigir_confusoes_ocr(texto_limpo)
+        candidatos_locais = gerar_candidatos(texto_limpo)
 
-        candidatos.append({
-            "texto": texto_corrigido,
-            "confianca": confianca_media,
-            "valido": validar_matricula(texto_corrigido),
-            "variante": i
-        })
+        for c in candidatos_locais:
+            candidatos.append({
+                "texto": c["texto"],
+                "confianca": confianca_media,
+                "pontos_padrao": c["pontos_padrao"],
+                "valido": c["valido"],
+                "variante": i,
+            })
 
         cv2.imwrite(f"debug_variante_{i}.jpg", img)
 
@@ -85,9 +148,9 @@ def tentar_ocr_em_variantes(variantes):
 
     validos = [c for c in candidatos if c["valido"]]
     if validos:
-        return max(validos, key=lambda x: x["confianca"])["texto"]
+        return max(validos, key=lambda x: (x["pontos_padrao"], x["confianca"]))["texto"]
 
-    return max(candidatos, key=lambda x: x["confianca"])["texto"]
+    return max(candidatos, key=lambda x: (x["pontos_padrao"], x["confianca"]))["texto"]
 
 
 def formatar_matricula(texto):
