@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router';
 import { a_star, custo_uniforme, profundidade_limitada, procura_sofrega, get_cities } from '../api/methods';
 import { get_atracoes } from '../api/atracoes';
+import { save_history } from '../api/history';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -59,16 +60,18 @@ function Search() {
             }
             console.log("Resposta do servidor:", response);
             setPathResult(response);
+            return response;
         } catch (error) {
             console.error("Erro ao encontrar caminho:", error);
             setPathResult(null);
+            return null;
         } finally {
             setLoadingPath(false);
         }
     }
 
     useEffect(() => {
-        const loadedMatricula = location.state?.matricula || sessionStorage.getItem('matricula') || "";
+        const loadedMatricula = location.state?.matricula || localStorage.getItem('matricula') || "";
         if (loadedMatricula) {
             setMatriculaLida(loadedMatricula);
             sessionStorage.setItem('matricula', loadedMatricula);
@@ -109,7 +112,7 @@ function Search() {
             )}
             <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white shadow-xl shadow-orange-100/40">
                 <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                         e.preventDefault();
                         const formData = new FormData(e.target);
                         const origem = formData.get("origem");
@@ -121,7 +124,25 @@ function Search() {
                         } else {
                             setError("");
                             const limite = method === "profundidade_limitada" ? (profundidadeLimite || null) : null;
-                            fetch_path(method, origem, destino, limite);
+                            const response = await fetch_path(method, origem, destino, limite);
+                            if (response) {
+                                try {
+                                    await save_history({
+                                        matricula: matriculaLida,
+                                        pesquisa: {  
+                                            origem,
+                                            destino,
+                                            metodo: method,
+                                            limite,
+                                            caminho: pathResult?.caminho,
+                                            custo: pathResult?.custo,
+                                            coordenadas: pathResult?.coordenadas
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error("Erro ao enviar histórico de pesquisa:", error);
+                                }
+                            }
                         }
                     }}
                     className="space-y-5 p-6"

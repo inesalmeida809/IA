@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { loginWithImage } from "../api/login";
 
 const Login = () => {
@@ -50,7 +50,7 @@ const Login = () => {
       setMatricula(matriculaLida);
       setMensagem(data.mensagem || "Pedido concluído com sucesso.");
       sessionStorage.setItem("matricula", matriculaLida);
-      navigate("/search", { state: { matricula: matriculaLida } });
+      navigate("/search");
     } catch (error) {
       console.error(error);
       setErro("Não foi possível ler a matrícula.");

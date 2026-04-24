@@ -17,6 +17,7 @@ from services.profundidade_limitada_service import router as procura_limitada_ro
 from services.a_service import router as a_service_router
 from services.cities_service import router as cities_router
 from services.modelo_ia_service import router as modelo_ia_router
+from services.save_history import router as save_history_router
 
 
 @asynccontextmanager
@@ -56,6 +57,7 @@ app.include_router(procura_limitada_router)
 app.include_router(a_service_router)
 app.include_router(cities_router)
 app.include_router(modelo_ia_router)
+app.include_router(save_history_router)
 
 
 @app.post("/login")

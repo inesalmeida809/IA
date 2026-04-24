@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Search from './views/search'
 import Login from './views/matriculas'
 import Base from './views/base'
