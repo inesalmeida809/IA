@@ -1,6 +1,14 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 const Base = () => {
+  const navigate = useNavigate();
+  const matricula = sessionStorage.getItem('matricula');
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('matricula');
+    navigate('/login', { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -16,6 +24,16 @@ const Base = () => {
                 />
               </div>
             </div>
+
+            {matricula && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </header>

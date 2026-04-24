@@ -78,22 +78,26 @@ def corrigir_confusoes_ocr(texto, padrao_tipo):
 
 def gerar_candidatos(texto_limpo):
     if len(texto_limpo) < 6:
+        print(f"[DEBUG] gerar_candidatos: texto muito curto '{texto_limpo}' ({len(texto_limpo)} chars)")
         return []
 
-    janelas = [texto_limpo[i:i + 6] for i in range(0, len(texto_limpo) - 5)]
+    janelas = [texto_limpo[i:i + 6] for i in range(len(texto_limpo) - 5)]
     candidatos = []
 
-    for janela in janelas:
+    for j, janela in enumerate(janelas):
         for padrao_tipo in PADROES_TIPO:
             corrigido, pontos_padrao = corrigir_confusoes_ocr(janela, padrao_tipo)
             if not corrigido:
                 continue
 
+            valido = validar_matricula(corrigido)
             candidatos.append({
                 "texto": corrigido,
                 "pontos_padrao": pontos_padrao,
-                "valido": validar_matricula(corrigido),
+                "valido": valido,
             })
+            if valido:
+                print(f"[DEBUG] Candidato VÁLIDO encontrado: {corrigido} (janela {j}: '{janela}', padrão: {padrao_tipo})")
 
     return candidatos
 
@@ -119,6 +123,7 @@ def tentar_ocr_em_variantes(variantes):
         )
 
         if not resultados:
+            print(f"[DEBUG] Variante {i}: sem resultados OCR")
             continue
 
         resultados_ordenados = sorted(
@@ -130,7 +135,9 @@ def tentar_ocr_em_variantes(variantes):
         confianca_media = sum([r[2] for r in resultados]) / len(resultados)
 
         texto_limpo = re.sub(r'[^A-Z0-9]', '', texto_completo.upper())
+        print(f"[DEBUG] Variante {i}: texto_completo='{texto_completo}' -> texto_limpo='{texto_limpo}' (confiança: {confianca_media:.2f})")
         candidatos_locais = gerar_candidatos(texto_limpo)
+        print(f"[DEBUG] Variante {i}: {len(candidatos_locais)} candidatos gerados")
 
         for c in candidatos_locais:
             candidatos.append({
@@ -144,13 +151,18 @@ def tentar_ocr_em_variantes(variantes):
         cv2.imwrite(f"debug_variante_{i}.jpg", img)
 
     if not candidatos:
+        print("[DEBUG] tentar_ocr_em_variantes: nenhum candidato encontrado")
         return None
 
     validos = [c for c in candidatos if c["valido"]]
     if validos:
-        return max(validos, key=lambda x: (x["pontos_padrao"], x["confianca"]))["texto"]
+        melhor = max(validos, key=lambda x: (x["pontos_padrao"], x["confianca"]))
+        print(f"[DEBUG] Matrícula válida selecionada: {melhor['texto']} (pontos: {melhor['pontos_padrao']}, confiança: {melhor['confianca']:.2f})")
+        return melhor["texto"]
 
-    return max(candidatos, key=lambda x: (x["pontos_padrao"], x["confianca"]))["texto"]
+    melhor = max(candidatos, key=lambda x: (x["pontos_padrao"], x["confianca"]))
+    print(f"[DEBUG] Nenhuma matrícula válida, selecionando melhor candidato: {melhor['texto']} (pontos: {melhor['pontos_padrao']}, confiança: {melhor['confianca']:.2f})")
+    return melhor["texto"]
 
 
 def formatar_matricula(texto):
@@ -168,22 +180,26 @@ def ler_matricula(file):
     plate_raw = detectar_matricula(caminho)
 
     if plate_raw is None:
+        print("[DEBUG] ler_matricula: matrícula não detectada pelo YOLO")
         return {"erro": "MATRICULA_NAO_ENCONTRADA"}
     
+    print("[DEBUG] ler_matricula: matrícula detectada, iniciando OCR...")
     variantes = preprocessar_para_ocr(plate_raw)
 
     texto = tentar_ocr_em_variantes(variantes)
 
     if not texto:
+        print("[DEBUG] ler_matricula: OCR sem resultado")
         return {"erro": "OCR_SEM_RESULTADO"}
 
-  
     matricula = formatar_matricula(texto)
 
     if matricula is None:
+        print(f"[DEBUG] ler_matricula: texto incompleto '{texto}'")
         return {"erro": f"TEXTO_INCOMPLETO: {texto}"}
 
     valida = validar_matricula(texto)
+    print(f"[DEBUG] ler_matricula: resultado final '{matricula}' (valida: {valida})")
 
     return {
         "matricula": matricula,

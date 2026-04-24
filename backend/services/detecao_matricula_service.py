@@ -7,20 +7,25 @@ model = YOLO("license_plate_detector.pt")
 
 def preprocessar_para_ocr(crop):
 
-    crop = cv2.resize(crop, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_LANCZOS4)
+    crop = cv2.resize(crop, None, fx=4.0, fy=4.0, interpolation=cv2.INTER_LANCZOS4)
 
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
 
-    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
-    clahe_img = clahe.apply(gray)
+    denoised = cv2.fastNlMeansDenoising(gray, None, h=10, templateWindowSize=7, searchWindowSize=21)
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    clahe_img = clahe.apply(denoised)
 
     adaptive = cv2.adaptiveThreshold(
         clahe_img, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY, 15, 8
+        cv2.THRESH_BINARY, 11, 5
     )
 
     _, otsu = cv2.threshold(clahe_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    otsu = cv2.morphologyEx(otsu, cv2.MORPH_CLOSE, morph_kernel)
 
   
     return [
