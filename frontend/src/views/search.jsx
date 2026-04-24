@@ -16,6 +16,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { get_atracoes } from "../api/atracoes";
+import { save_history } from "../api/history";
 
 function Search() {
   const [cities, setCities] = useState([]);
@@ -43,11 +44,20 @@ function Search() {
   const fetch_atracoes = async (cidades) => {
     try {
       setLoadingAtracoes(true);
+      setError("");
       const response = await get_atracoes(cidades);
+
+      if (response?.erro) {
+        setAtracoes([]);
+        setError(response.erro);
+        return;
+      }
+
       console.log("Atrações recebidas:", response);
       setAtracoes(response);
     } catch (error) {
       console.error("Erro ao buscar atrações:", error);
+      setError("Não foi possível carregar as atrações.");
       setAtracoes(null);
     } finally {
       setLoadingAtracoes(false);
@@ -147,18 +157,17 @@ function Search() {
               );
               if (response) {
                 try {
-                  /* await save_history({
+                  await save_history({
                     matricula: matriculaLida,
                     pesquisa: {
                       origem,
                       destino,
                       metodo: method,
                       limite,
-                      caminho: pathResult?.caminho,
-                      custo: pathResult?.custo,
-                      coordenadas: pathResult?.coordenadas,
+                      caminho: response?.caminho,
+                      custo: response?.custo,
                     },
-                  }); */
+                  });
                 } catch (error) {
                   console.error("Erro ao enviar histórico de pesquisa:", error);
                 }

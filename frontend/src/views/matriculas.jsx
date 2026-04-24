@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginWithImage } from "../api/login";
+import { save_plate } from "../api/history";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -47,6 +48,12 @@ const Login = () => {
         "";
 
       const valorFinal = String(matriculaLida).trim();
+
+      try {
+        await save_plate(matriculaLida);
+      } catch (saveError) {
+        console.error("Erro ao salvar matrícula no backend:", saveError);
+      }
 
       setMatricula(valorFinal);
       setMensagem(data?.mensagem || "Login efetuado");

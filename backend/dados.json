@@ -1,0 +1,24 @@
+[
+    {
+        "matricula": "AA-01-AA",
+        "historico": []
+    },
+    {
+        "matricula": "AA-00-AA",
+        "historico": [
+            {
+                "origem": "Aveiro",
+                "destino": "Portalegre",
+                "metodo": "custo_uniforme",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Coimbra",
+                    "Castelo Branco",
+                    "Portalegre"
+                ],
+                "custo": 307
+            }
+        ]
+    }
+]
