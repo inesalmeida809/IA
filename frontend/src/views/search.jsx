@@ -45,16 +45,20 @@ function Search() {
     try {
       setLoadingAtracoes(true);
       setError("");
-      const response = await get_atracoes(cidades);
+      setAtracoes([]);
 
-      if (response?.erro) {
-        setAtracoes([]);
-        setError(response.erro);
-        return;
-      }
+      await get_atracoes(cidades, (novaAtraçao) => {
 
-      console.log("Atrações recebidas:", response);
-      setAtracoes(response);
+        if (novaAtraçao.erro) {
+          console.warn("Erro recebido do backend para uma cidade:", novaAtraçao.erro);
+        } else {
+          console.log(`Chegou: ${novaAtraçao.distrito}`);
+          setAtracoes((prev) => [...(prev || []), novaAtraçao]);
+        }
+
+      });
+
+      console.log("Todas as atrações terminaram de carregar!");
     } catch (error) {
       console.error("Erro ao buscar atrações:", error);
       setError("Não foi possível carregar as atrações.");
@@ -289,7 +293,7 @@ function Search() {
           )}
           <button
             type="submit"
-            disabled={loadingPath}
+            disabled={loadingPath || loadingAtracoes}
             className="inline-flex w-full items-center justify-center rounded-2xl bg-orange-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-orange-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingPath ? "A pesquisar..." : "Pesquisar Caminho"}
@@ -331,8 +335,14 @@ function Search() {
             <MapContainer
               center={mapCenter}
               zoom={7}
-              scrollWheelZoom={true}
-              style={{ height: "500px", width: "100%" }}
+              scrollWheelZoom={false}
+              style={{ height: "600px", width: "100%" }}
+              dragging={false}          
+              touchZoom={false}         
+              doubleClickZoom={false}   
+              boxZoom={false}           
+              keyboard={false}    
+              zoomControl={false}      
             >
               <TileLayer
                 attribution="&copy; OpenStreetMap contributors"
@@ -378,16 +388,7 @@ function Search() {
             </div>
 
             <div className="p-4 overflow-y-auto" style={{ height: "500px" }}>
-              {loadingAtracoes ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                    <p className="text-sm text-orange-600">
-                      A carregar atrações...
-                    </p>
-                  </div>
-                </div>
-              ) : atracoes && atracoes.length > 0 ? (
+              {atracoes && atracoes.length > 0 ? (
                 <div className="space-y-5">
                   {atracoes.map((item) => (
                     <div
@@ -414,6 +415,23 @@ function Search() {
                       </div>
                     </div>
                   ))}
+                  {loadingAtracoes && (
+                    <div className="flex flex-col items-center justify-center py-4 mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-3"></div>
+                      <span className="text-sm font-medium text-orange-600 animate-pulse">
+                        A procurar mais atrações...
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : loadingAtracoes ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                    <p className="text-sm text-orange-600">
+                      A iniciar procura...
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-center text-gray-500">

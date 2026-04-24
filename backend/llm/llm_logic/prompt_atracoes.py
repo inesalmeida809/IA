@@ -12,7 +12,7 @@ def carregar_dados_monumentos():
     with open(ficheiro_dados, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def atracoes_monumentos(llm, distritos_a_testar):
+def atracoes_monumentos_stream(llm, distritos_a_testar):
 
     base_dados = carregar_dados_monumentos()
 
@@ -22,8 +22,8 @@ def atracoes_monumentos(llm, distritos_a_testar):
         informacao_real = base_dados.get(distrito.capitalize(), None)
 
         if not informacao_real:
-            print(f"\n\nNão temos dados no ficheiro para o distrito: {distrito}")
-            return []
+            yield json.dumps({"erro": f"Não temos dados no ficheiro para o distrito: {distrito}"}) + "\n"
+            continue
 
         messages = [
             {
@@ -67,11 +67,7 @@ def atracoes_monumentos(llm, distritos_a_testar):
 
         try:
             dados_json = json.loads(texto_gerado)
-            json_monumentos.append(dados_json)
+            yield json.dumps(dados_json) + "\n"
         except json.JSONDecodeError:
-            print("Erro: O modelo não devolveu um JSON válido.")
-            print("Resposta bruta da IA:")
-            print(texto_gerado)
-    
-    return json_monumentos
+            yield json.dumps({"erro": f"O modelo não devolveu um JSON válido para {distrito}."}) + "\n"
 

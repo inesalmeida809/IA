@@ -1,23 +1,234 @@
 [
     {
-        "matricula": "AA-01-AA",
-        "historico": []
-    },
-    {
-        "matricula": "AA-00-AA",
+        "matricula": "AA-62-BD",
         "historico": [
             {
+                "origem": "Viseu",
+                "destino": "Aveiro",
+                "metodo": "procura_sofrega",
+                "limite": null,
+                "caminho": [
+                    "Viseu",
+                    "Aveiro"
+                ]
+            },
+            {
+                "origem": "Faro",
+                "destino": "Aveiro",
+                "metodo": "procura_sofrega",
+                "limite": null,
+                "caminho": [
+                    "Faro",
+                    "Lisboa",
+                    "Leiria",
+                    "Aveiro"
+                ]
+            },
+            {
+                "origem": "Braga",
+                "destino": "Aveiro",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Braga",
+                    "Porto",
+                    "Aveiro"
+                ],
+                "custo": 121
+            },
+            {
                 "origem": "Aveiro",
-                "destino": "Portalegre",
-                "metodo": "custo_uniforme",
+                "destino": "Viseu",
+                "metodo": "a_star",
                 "limite": null,
                 "caminho": [
                     "Aveiro",
-                    "Coimbra",
-                    "Castelo Branco",
-                    "Portalegre"
+                    "Viseu"
                 ],
-                "custo": 307
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Guarda",
+                "destino": "Aveiro",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Guarda",
+                    "Viseu",
+                    "Aveiro"
+                ],
+                "custo": 180
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Viseu",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Viseu"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Leiria",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro",
+                    "Leiria"
+                ],
+                "custo": 115
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Aveiro",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro"
+                ],
+                "custo": 0
+            },
+            {
+                "origem": "Aveiro",
+                "destino": "Aveiro",
+                "metodo": "a_star",
+                "limite": null,
+                "caminho": [
+                    "Aveiro"
+                ],
+                "custo": 0
+            }
+        ]
+    },
+    {
+        "matricula": "AA-93-CT",
+        "historico": [
+            {
+                "origem": "Viseu",
+                "destino": "Viseu",
+                "metodo": "custo_uniforme",
+                "limite": null,
+                "caminho": [
+                    "Viseu"
+                ],
+                "custo": 0
+            },
+            {
+                "origem": "Viseu",
+                "destino": "Aveiro",
+                "metodo": "custo_uniforme",
+                "limite": null,
+                "caminho": [
+                    "Viseu",
+                    "Aveiro"
+                ],
+                "custo": 95
+            },
+            {
+                "origem": "Coimbra",
+                "destino": "Faro",
+                "metodo": "custo_uniforme",
+                "limite": null,
+                "caminho": [
+                    "Coimbra",
+                    "Leiria",
+                    "Santarém",
+                    "Évora",
+                    "Beja",
+                    "Faro"
+                ],
+                "custo": 484
             }
         ]
     }
